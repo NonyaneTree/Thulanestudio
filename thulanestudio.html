@@ -22,7 +22,7 @@
             filter: brightness(1.5) contrast(2) saturate(2.5) drop-shadow(0 0 10px #000);
             will-change: transform, opacity;
             transition: all 0.4s ease-in-out;
-            object-fit: cover;  /* Ensures clear scaling of video */
+            object-fit: cover;
         }
         video:hover {
             transform: scale(1.02);
@@ -87,7 +87,8 @@
         <option value="Chinese.pdf">Chinese</option>
         <option value="French.pdf">French</option>
     </select>
-    <br>
+    <br><br>
+
     <div id="pdfContent">Select a language to view its dictionary.</div>
     <br>
     <button onclick="startTranslation()">Start Real-Time Translation</button>
@@ -100,7 +101,10 @@
             const language = document.getElementById('language').value;
             const pdfContent = document.getElementById('pdfContent');
 
-            const loadingTask = pdfjsLib.getDocument(language);
+            // Show placeholder content initially
+            pdfContent.textContent = 'PDF content is being loaded...';
+
+            const loadingTask = pdfjsLib.getDocument(`/pdfs/${language}`);  // Load the PDF from server directory
             loadingTask.promise.then((pdf) => {
                 let textContent = '';
                 let pagePromises = [];
@@ -119,6 +123,11 @@
 
                 Promise.all(pagePromises).then(() => {
                     pdfContent.textContent = textContent;
+                    // After loading, translate the extracted text if needed
+                    const languageSelection = document.getElementById('language').value;
+                    translateText(textContent, languageSelection).then((translatedText) => {
+                        pdfContent.textContent = translatedText;
+                    });
                 });
             }).catch((error) => {
                 pdfContent.textContent = "Error loading PDF. Make sure the file exists and is in the correct directory.";
@@ -162,23 +171,9 @@
             return data.responseData.translatedText;
         }
 
-        // Function to handle video upload and display
-        function loadUploadedVideo(event) {
-            const videoPlayer = document.getElementById('videoPlayer');
-            const videoSource = document.getElementById('videoSource');
-            const file = event.target.files[0];
-
-            if (file) {
-                const objectURL = URL.createObjectURL(file);
-                videoSource.src = objectURL;
-                videoPlayer.load();
-            }
-        }
-
         // Function to adjust video volume
         function adjustVolume(event) {
             const videoPlayer = document.getElementById('videoPlayer');
-            // Adjust volume, setting it to the range value (0 - 1)
             videoPlayer.volume = event.target.value;
         }
     </script>
